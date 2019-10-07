@@ -24,6 +24,7 @@ import com.decathlon.ara.domain.QFunctionality;
 import com.decathlon.ara.repository.CountryRepository;
 import com.decathlon.ara.repository.FunctionalityRepository;
 import com.decathlon.ara.repository.TeamRepository;
+import com.decathlon.ara.service.dto.functionality.CartographyFilterDTO;
 import com.decathlon.ara.service.dto.functionality.ExporterInfoDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityWithChildrenDTO;
@@ -56,6 +57,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,7 +68,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class FunctionalityService {
-    private static final List<Exporter> AVAILABLE_EXPORTERS = Lists.newArrayList(
+    static final List<Exporter> AVAILABLE_EXPORTERS = Lists.newArrayList(
             new AraExporter(), new SquashExporter()
     );
 
@@ -305,6 +307,11 @@ public class FunctionalityService {
             result.add(new ExporterInfoDTO(exporter.getName(), exporter.getDescription(), exporter.getFormat()));
         }
         return result;
+    }
+
+    public ByteArrayResource generateExport(String projectCode, CartographyFilterDTO filter, String exportType) throws BadRequestException {
+        // TODO
+        return null;
     }
 
     private TreePosition computeDestinationTreePosition(long projectId, Long referenceId, FunctionalityPosition relativePosition, Functionality source) throws BadRequestException {

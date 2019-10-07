@@ -22,6 +22,7 @@ import com.decathlon.ara.coverage.CoverageService;
 import com.decathlon.ara.service.FunctionalityService;
 import com.decathlon.ara.service.ProjectService;
 import com.decathlon.ara.service.dto.coverage.CoverageDTO;
+import com.decathlon.ara.service.dto.functionality.CartographyFilterDTO;
 import com.decathlon.ara.service.dto.functionality.ExporterInfoDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityWithChildrenDTO;
@@ -40,6 +41,9 @@ import javax.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -210,5 +214,19 @@ public class FunctionalityResource {
     @Timed
     public ResponseEntity<List<ExporterInfoDTO>> getExportOptions(@PathVariable String projectCode) {
         return ResponseEntity.ok().body(service.listAvailableExporters());
+    }
+
+    @GetMapping("/export")
+    @Timed
+    public ResponseEntity<Resource> export(@PathVariable String projectCode, CartographyFilterDTO filter, @RequestParam String exportType) {
+        try {
+            ByteArrayResource resource = service.generateExport(projectCode, filter, exportType);
+            return ResponseEntity.ok()
+                    .contentLength(resource.contentLength())
+                    .contentType(MediaType.parseMediaType("application/octet-stream"))
+                    .body(resource);
+        } catch (BadRequestException ex) {
+            return ResponseUtil.handle(ex);
+        }
     }
 }
