@@ -17,10 +17,14 @@
 
 package com.decathlon.ara.service;
 
+import com.decathlon.ara.cartography.AraExporter;
+import com.decathlon.ara.cartography.Exporter;
+import com.decathlon.ara.cartography.SquashExporter;
 import com.decathlon.ara.domain.QFunctionality;
 import com.decathlon.ara.repository.CountryRepository;
 import com.decathlon.ara.repository.FunctionalityRepository;
 import com.decathlon.ara.repository.TeamRepository;
+import com.decathlon.ara.service.dto.functionality.ExporterInfoDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityWithChildrenDTO;
 import com.decathlon.ara.service.dto.request.FunctionalityPosition;
@@ -46,6 +50,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+
+import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -60,6 +66,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class FunctionalityService {
+    private static final List<Exporter> AVAILABLE_EXPORTERS = Lists.newArrayList(
+            new AraExporter(), new SquashExporter()
+    );
+
 
     @NonNull
     private final FunctionalityRepository repository;
@@ -127,7 +137,7 @@ public class FunctionalityService {
         ObjectUtil.trimStringValues(dtoToUpdate);
 
         // Must update an existing entity
-        Functionality dataBaseEntity = repository.findByProjectIdAndId(projectId, dtoToUpdate.getId().longValue());
+        Functionality dataBaseEntity = repository.findByProjectIdAndId(projectId, dtoToUpdate.getId());
         if (dataBaseEntity == null) {
             String message = (isFolder(dtoToUpdate) ? Messages.NOT_FOUND_FUNCTIONALITY_FOLDER : Messages.NOT_FOUND_FUNCTIONALITY);
             throw new NotFoundException(message, Entities.FUNCTIONALITY);
@@ -217,9 +227,9 @@ public class FunctionalityService {
 
         // New entities are not covered
         final boolean isFolder = entity.getType() == FunctionalityType.FOLDER;
-        entity.setCoveredScenarios(isFolder ? null : Integer.valueOf(0));
+        entity.setCoveredScenarios(isFolder ? null : 0);
         entity.setCoveredCountryScenarios(null);
-        entity.setIgnoredScenarios(isFolder ? null : Integer.valueOf(0));
+        entity.setIgnoredScenarios(isFolder ? null : 0);
         entity.setIgnoredCountryScenarios(null);
 
         return mapper.toDto(repository.save(entity));
@@ -283,6 +293,20 @@ public class FunctionalityService {
         return scenarioMapper.toDto(functionality.getScenarios());
     }
 
+
+    /**
+     * List all the available cartography exporters in ARA.
+     *
+     * @return the list of all the available exporters
+     */
+    public List<ExporterInfoDTO> listAvailableExporters() {
+        List<ExporterInfoDTO> result = new ArrayList<>();
+        for (final Exporter exporter: AVAILABLE_EXPORTERS) {
+            result.add(new ExporterInfoDTO(exporter.getName(), exporter.getDescription(), exporter.getFormat()));
+        }
+        return result;
+    }
+
     private TreePosition computeDestinationTreePosition(long projectId, Long referenceId, FunctionalityPosition relativePosition, Functionality source) throws BadRequestException {
         FunctionalityPosition effectivePosition = (relativePosition == null ? FunctionalityPosition.LAST_CHILD : relativePosition);
         Functionality reference = findAndEnsureReference(projectId, referenceId, effectivePosition);
@@ -318,7 +342,7 @@ public class FunctionalityService {
 
     private void ensureNotInsertingIntoFunctionality(long projectId, FunctionalityPosition effectivePosition, Long parentId) throws BadRequestException {
         if (effectivePosition == FunctionalityPosition.LAST_CHILD && parentId != null) {
-            Functionality parent = repository.findByProjectIdAndId(projectId, parentId.longValue());
+            Functionality parent = repository.findByProjectIdAndId(projectId, parentId);
             if (parent.getType() == FunctionalityType.FUNCTIONALITY) {
                 throw new BadRequestException(Messages.RULE_FUNCTIONALITY_HAVE_NO_CHILDREN, Entities.FUNCTIONALITY, "functionalities_cannot_have_children");
             }
@@ -365,7 +389,7 @@ public class FunctionalityService {
             }
             reference = null;
         } else {
-            reference = repository.findByProjectIdAndId(projectId, referenceId.longValue());
+            reference = repository.findByProjectIdAndId(projectId, referenceId);
             if (reference == null) {
                 throw new NotFoundException(Messages.NOT_FOUND_FUNCTIONALITY_OR_FOLDER_REFERENCE, Entities.FUNCTIONALITY);
             }
@@ -433,8 +457,8 @@ public class FunctionalityService {
         folderHasContent |= StringUtils.isNotEmpty(functionality.getCreated());
         folderHasContent |= Boolean.TRUE.equals(functionality.getStarted());
         folderHasContent |= Boolean.TRUE.equals(functionality.getNotAutomatable());
-        folderHasContent |= functionality.getCoveredScenarios() != null && functionality.getCoveredScenarios().intValue() != 0;
-        folderHasContent |= functionality.getIgnoredScenarios() != null && functionality.getIgnoredScenarios().intValue() != 0;
+        folderHasContent |= functionality.getCoveredScenarios() != null && functionality.getCoveredScenarios() != 0;
+        folderHasContent |= functionality.getIgnoredScenarios() != null && functionality.getIgnoredScenarios() != 0;
         folderHasContent |= StringUtils.isNotEmpty(functionality.getCoveredCountryScenarios());
         folderHasContent |= StringUtils.isNotEmpty(functionality.getIgnoredCountryScenarios());
         folderHasContent |= StringUtils.isNotEmpty(functionality.getComment());
@@ -473,7 +497,7 @@ public class FunctionalityService {
         }
 
         if (functionality.getTeamId() != null) {
-            TeamDTO team = teamService.findOne(projectId, functionality.getTeamId().longValue());
+            TeamDTO team = teamService.findOne(projectId, functionality.getTeamId());
             if (!team.isAssignableToFunctionalities()) {
                 throw new BadRequestException(Messages.RULE_TEAM_NOT_ASSIGNABLE_TO_FUNCTIONALITIES, Entities.TEAM, "not_assignable_team");
             }
@@ -495,5 +519,4 @@ public class FunctionalityService {
         }
         return nodes;
     }
-
 }

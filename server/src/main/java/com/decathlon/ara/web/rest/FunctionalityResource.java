@@ -22,6 +22,7 @@ import com.decathlon.ara.coverage.CoverageService;
 import com.decathlon.ara.service.FunctionalityService;
 import com.decathlon.ara.service.ProjectService;
 import com.decathlon.ara.service.dto.coverage.CoverageDTO;
+import com.decathlon.ara.service.dto.functionality.ExporterInfoDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityWithChildrenDTO;
 import com.decathlon.ara.service.dto.request.MoveFunctionalityDTO;
@@ -32,20 +33,15 @@ import com.decathlon.ara.service.exception.NotFoundException;
 import com.decathlon.ara.web.rest.util.HeaderUtil;
 import com.decathlon.ara.web.rest.util.ResponseUtil;
 import com.decathlon.ara.Entities;
+
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import static com.decathlon.ara.web.rest.util.RestConstants.PROJECT_API_PATH;
 
@@ -204,4 +200,15 @@ public class FunctionalityResource {
         }
     }
 
+    /**
+     * Returns the JSON of all the available Cartography exporters in ARA.
+     *
+     * @param projectCode the current project code
+     * @return the JSON of all the exporters available.
+     */
+    @RequestMapping(method= RequestMethod.OPTIONS, path="/export")
+    @Timed
+    public ResponseEntity<List<ExporterInfoDTO>> getExportOptions(@PathVariable String projectCode) {
+        return ResponseEntity.ok().body(service.listAvailableExporters());
+    }
 }
