@@ -22,7 +22,6 @@ import com.decathlon.ara.coverage.CoverageService;
 import com.decathlon.ara.service.FunctionalityService;
 import com.decathlon.ara.service.ProjectService;
 import com.decathlon.ara.service.dto.coverage.CoverageDTO;
-import com.decathlon.ara.service.dto.functionality.CartographyFilterDTO;
 import com.decathlon.ara.service.dto.functionality.ExporterInfoDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityWithChildrenDTO;
@@ -35,7 +34,6 @@ import com.decathlon.ara.web.rest.util.HeaderUtil;
 import com.decathlon.ara.web.rest.util.ResponseUtil;
 import com.decathlon.ara.Entities;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.NonNull;
@@ -218,9 +216,9 @@ public class FunctionalityResource {
 
     @GetMapping("/export")
     @Timed
-    public ResponseEntity<Resource> export(@PathVariable String projectCode, CartographyFilterDTO filter, @RequestParam String exportType) {
+    public ResponseEntity<Resource> export(@PathVariable String projectCode, @RequestParam List<Long> functionalities, @RequestParam String exportType) {
         try {
-            ByteArrayResource resource = service.generateExport(projectCode, filter, exportType);
+            ByteArrayResource resource = service.generateExport(functionalities, exportType);
             return ResponseEntity.ok()
                     .contentLength(resource.contentLength())
                     .contentType(MediaType.parseMediaType("application/octet-stream"))

@@ -17,14 +17,19 @@
 
 package com.decathlon.ara.service;
 
+import com.decathlon.ara.Entities;
+import com.decathlon.ara.Messages;
 import com.decathlon.ara.cartography.AraExporter;
 import com.decathlon.ara.cartography.Exporter;
 import com.decathlon.ara.cartography.SquashExporter;
+import com.decathlon.ara.common.NotGonnaHappenException;
+import com.decathlon.ara.domain.Functionality;
 import com.decathlon.ara.domain.QFunctionality;
+import com.decathlon.ara.domain.enumeration.FunctionalitySeverity;
+import com.decathlon.ara.domain.enumeration.FunctionalityType;
 import com.decathlon.ara.repository.CountryRepository;
 import com.decathlon.ara.repository.FunctionalityRepository;
 import com.decathlon.ara.repository.TeamRepository;
-import com.decathlon.ara.service.dto.functionality.CartographyFilterDTO;
 import com.decathlon.ara.service.dto.functionality.ExporterInfoDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityDTO;
 import com.decathlon.ara.service.dto.functionality.FunctionalityWithChildrenDTO;
@@ -40,18 +45,7 @@ import com.decathlon.ara.service.mapper.FunctionalityMapper;
 import com.decathlon.ara.service.mapper.FunctionalityWithChildrenMapper;
 import com.decathlon.ara.service.mapper.ScenarioMapper;
 import com.decathlon.ara.service.support.TreePosition;
-import com.decathlon.ara.Entities;
-import com.decathlon.ara.Messages;
-import com.decathlon.ara.common.NotGonnaHappenException;
-import com.decathlon.ara.domain.Functionality;
-import com.decathlon.ara.domain.enumeration.FunctionalitySeverity;
-import com.decathlon.ara.domain.enumeration.FunctionalityType;
 import com.decathlon.ara.service.util.ObjectUtil;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-
 import com.google.common.collect.Lists;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +54,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Service for managing Functionality.
@@ -309,9 +309,19 @@ public class FunctionalityService {
         return result;
     }
 
-    public ByteArrayResource generateExport(String projectCode, CartographyFilterDTO filter, String exportType) throws BadRequestException {
-        // TODO
-        return null;
+    public ByteArrayResource generateExport(List<Long> functionalitiesIds, String exportType) throws BadRequestException {
+        List<Functionality> functionalities = repository.findAllById(functionalitiesIds);
+        List<FunctionalityDTO> functionalityDTOS = mapper.toDto(functionalities)
+                .stream()
+                .peek(f -> f.setId(null)) // Remove the ids to not expose them in the export.
+                .collect(Collectors.toList());
+
+        return new ByteArrayResource(AVAILABLE_EXPORTERS
+                .stream()
+                .filter(e -> e.suitableFor(exportType))
+                .findFirst()
+                .orElseThrow(() -> new BadRequestException(Messages.EXPORT_FUNCTIONALITY_UKNOWN_EXPORTER, Entities.FUNCTIONALITY, "unknown_exporter"))
+                .generate(functionalityDTOS));
     }
 
     private TreePosition computeDestinationTreePosition(long projectId, Long referenceId, FunctionalityPosition relativePosition, Functionality source) throws BadRequestException {

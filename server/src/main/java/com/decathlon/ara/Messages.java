@@ -117,4 +117,6 @@ public final class Messages {
 
     public static final String IMPORT_POSTMAN_ZIP_ERROR = "The given Postman ZIP reports can't be extracted.";
     public static final String IMPORT_POSTMAN_NOT_FS_INDEXER = "The given project should use the FileSystem Indexer for this action to work.";
+
+    public static final String EXPORT_FUNCTIONALITY_UKNOWN_EXPORTER = "Unknown Export format. Please choose a proposed one.";
 }

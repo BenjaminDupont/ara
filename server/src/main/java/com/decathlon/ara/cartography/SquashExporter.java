@@ -1,6 +1,10 @@
 package com.decathlon.ara.cartography;
 
-public class SquashExporter implements Exporter {
+import com.decathlon.ara.service.dto.functionality.FunctionalityDTO;
+
+import java.util.List;
+
+public class SquashExporter extends Exporter {
     @Override
     public String getName() {
         return "SquashTM";
@@ -14,5 +18,11 @@ public class SquashExporter implements Exporter {
     @Override
     public String getFormat() {
         return "xls";
+    }
+
+    @Override
+    public byte[] generate(List<FunctionalityDTO> functionalities) {
+        // TODO
+        return new byte[0];
     }
 }
