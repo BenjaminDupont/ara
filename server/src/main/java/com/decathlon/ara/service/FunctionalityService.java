@@ -19,9 +19,7 @@ package com.decathlon.ara.service;
 
 import com.decathlon.ara.Entities;
 import com.decathlon.ara.Messages;
-import com.decathlon.ara.cartography.AraExporter;
-import com.decathlon.ara.cartography.Exporter;
-import com.decathlon.ara.cartography.SquashExporter;
+import com.decathlon.ara.cartography.*;
 import com.decathlon.ara.common.NotGonnaHappenException;
 import com.decathlon.ara.domain.Functionality;
 import com.decathlon.ara.domain.QFunctionality;
@@ -72,6 +70,8 @@ public class FunctionalityService {
             new AraExporter(), new SquashExporter()
     );
 
+    private static final AraCartographyMapper CARTOGRAPHY_MAPPER = new AraCartographyMapper();
+
 
     @NonNull
     private final FunctionalityRepository repository;
@@ -84,6 +84,9 @@ public class FunctionalityService {
 
     @NonNull
     private final TeamService teamService;
+
+    @NonNull
+    private final ProjectService projectService;
 
     @NonNull
     private final FunctionalityMapper mapper;
@@ -322,6 +325,24 @@ public class FunctionalityService {
                 .findFirst()
                 .orElseThrow(() -> new BadRequestException(Messages.EXPORT_FUNCTIONALITY_UKNOWN_EXPORTER, Entities.FUNCTIONALITY, "unknown_exporter"))
                 .generate(functionalityDTOS));
+    }
+
+    public void importJSONFunctionalities(String projectCode, String jsonFunctionalities) throws BadRequestException {
+        long projectId = projectService.toId(projectCode);
+        List<FunctionalityDTO> functionalityDTOS = CARTOGRAPHY_MAPPER.asFunctionalities(jsonFunctionalities);
+        if (functionalityDTOS.isEmpty()) {
+            throw new BadRequestException(Messages.IMPORT_FUNCTIONALITY_BAD_INPUT, Entities.FUNCTIONALITY, "import_bad_input");
+        }
+        Date now = new Date();
+        List<Functionality> functionalities = mapper.toEntity(functionalityDTOS)
+                .stream()
+                .peek(f -> {
+                    f.setProjectId(projectId);
+                    f.setCreationDateTime(now);
+                    f.setUpdateDateTime(now);
+                })
+                .collect(Collectors.toList());
+        repository.saveAll(functionalities);
     }
 
     private TreePosition computeDestinationTreePosition(long projectId, Long referenceId, FunctionalityPosition relativePosition, Functionality source) throws BadRequestException {

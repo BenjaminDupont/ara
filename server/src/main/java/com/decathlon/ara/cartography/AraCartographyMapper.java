@@ -2,9 +2,12 @@ package com.decathlon.ara.cartography;
 
 import com.decathlon.ara.service.dto.functionality.FunctionalityDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,7 +17,9 @@ import java.util.List;
  * @since 4.1.0
  */
 @Slf4j
-class AraCartographyMapper {
+public class AraCartographyMapper {
+
+    private static final TypeReference<List<FunctionalityDTO>> TYPE_REFERENCE = new TypeReference<List<FunctionalityDTO>>() {};
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -34,6 +39,15 @@ class AraCartographyMapper {
         } catch (JsonProcessingException ex) {
             log.error("Unable to serialize the wanted cartography into an ARA export.", ex);
             return "{}";
+        }
+    }
+
+    public List<FunctionalityDTO> asFunctionalities(String jsonRepresentation) {
+        try {
+            return objectMapper.readValue(jsonRepresentation, TYPE_REFERENCE);
+        } catch (IOException ex) {
+            log.error("Unable to deserialize the given JSON into a list of Functionalities.", ex);
+            return new ArrayList<>();
         }
     }
 }

@@ -227,4 +227,15 @@ public class FunctionalityResource {
             return ResponseUtil.handle(ex);
         }
     }
+
+    @PostMapping("/import")
+    @Timed
+    public ResponseEntity<Resource> importFunctionalities(@PathVariable String projectCode, @RequestBody String jsonFunctionalities) {
+        try {
+            service.importJSONFunctionalities(projectCode, jsonFunctionalities);
+            return ResponseEntity.ok().build();
+        } catch (BadRequestException ex) {
+            return ResponseUtil.handle(ex);
+        }
+    }
 }

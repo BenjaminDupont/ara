@@ -1,19 +1,11 @@
 package com.decathlon.ara.cartography;
 
-import com.decathlon.ara.ci.bean.QualityThreshold;
-import com.decathlon.ara.common.NotGonnaHappenException;
 import com.decathlon.ara.service.dto.functionality.FunctionalityDTO;
-import com.decathlon.ara.service.dto.quality.QualitySeverityDTO;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
