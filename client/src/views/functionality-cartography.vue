@@ -133,9 +133,35 @@
 
         <div class="headerCell" :style="'width: ' + (columnSizes[7]) + 'px; text-align: center;'">
           Actions
-          <Button size="small" :disabled="!hasFilter" @click="removeAllFilters()" title="Remove all filters">
-            <Icon type="md-backspace"/>
-          </Button>
+           <if-feature-enabled code="xprt-mprt-crtg">
+              <Dropdown title="Other actions" trigger="click" placement="bottom-end" :transfer="true" @on-visible-change="dropDownVisibilityChanged">
+                <Button size="small">
+                  <Icon type="md-menu"/>
+                </Button>
+                <DropdownMenu slot="list">
+                  <DropdownItem>
+                    <div @click="removeAllFilters()">
+                      <Icon type="md-backspace"/> REMOVE ALL FILTERS
+                    </div>
+                  </DropdownItem>
+                  <DropdownItem>
+                    <div>
+                      <Icon type="md-cloud-download" /> EXPORT CURRENT FUNCTIONALITIES
+                    </div>
+                  </DropdownItem>
+                  <DropdownItem>
+                    <div>
+                      <Icon type="md-cloud-upload" /> IMPORT NEW FUNCTIONALITIES
+                    </div>
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+          </if-feature-enabled> 
+          <if-feature-disabled code="xprt-mprt-crtg">
+            <Button size="small" :disabled="!hasFilter" @click="removeAllFilters()" title="Remove all filters">
+              <Icon type="md-backspace"/> 
+            </Button>
+          </if-feature-disabled>
         </div>
 
       </div>
@@ -249,6 +275,8 @@
   import functionalityMenuComponent from '../components/functionality-menu'
   import functionalityNodeComponent from '../components/functionality-node'
   import functionalityCoverageDetailsComponent from '../components/functionality-coverage-details'
+  import ifFeatureEnabledComponent from '../components/if-feature-enabled'
+  import ifFeatureDisabledComponent from '../components/if-feature-disabled'
 
   import constants from '../libs/constants.js'
 
@@ -276,7 +304,9 @@
     components: {
       'functionality-menu': functionalityMenuComponent,
       'functionality-node': functionalityNodeComponent,
-      'functionality-coverage-details': functionalityCoverageDetailsComponent
+      'functionality-coverage-details': functionalityCoverageDetailsComponent,
+      'if-feature-enabled': ifFeatureEnabledComponent,
+      'if-feature-disabled': ifFeatureDisabledComponent
     },
 
     data () {
@@ -570,8 +600,10 @@
       },
 
       removeAllFilters () {
-        this.filter = { ...DEFAULT_FILTER }
-        this.filterFunctionalities()
+        if (this.hasFilter()) {
+          this.filter = { ...DEFAULT_FILTER }
+          this.filterFunctionalities()
+        }
       },
 
       flattenMatchingFunctionalities () {

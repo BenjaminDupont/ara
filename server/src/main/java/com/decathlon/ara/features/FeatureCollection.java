@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.decathlon.ara.features.available.ExportImportCartographyFeature;
 import com.decathlon.ara.features.available.JiraAdapterFeature;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +49,7 @@ public class FeatureCollection {
         // this.register(new YourFeatureFlippingClass());
         //
         this.register(new JiraAdapterFeature());
+        this.register(new ExportImportCartographyFeature());
     }
 
     /**
